@@ -1,35 +1,56 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import MoviesList from './components/MoviesList';
 import './App.css';
 import Button from '@mui/material/Button';
 import Skeleton from '@mui/material/Skeleton';
+import AddMovie from './components/AddMovie';
 
 function App() {
 
+  // Set states for movielist, loading, error
   const [movieList, setMovieList] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  async function fetchMoviesHandler() {
-    setIsLoading(true)
-    const response = await fetch('https://swapi.dev/api/films')
-    const result = await response.json()
-    const movieObjects = result.results.map(movieData => {
-      return {
-        key:movieData.episode_id,
-        title:movieData.title,
-        openingText:movieData.opening_crawl,
+  // Define function to get movie list from api,
+  // wrapped in useCallback, since it is a dependency of useEffect so shouldn't 
+  // be recreated on every component render.
+  const fetchMoviesHandler = useCallback(async () => {
+    try{
+      setIsLoading(true)
+      setError(null)
+      const response = await fetch('https://swapi.dev/api/films')
+      
+      if (!response.ok) {
+        console.log(response)
+        throw new Error("Bad response.")
       }
-    })
-    setMovieList(movieObjects)
+      
+      const result = await response.json()
+      const movieObjects = result.results.map(movieData => {
+        return {
+          key:movieData.episode_id,
+          title:movieData.title,
+          openingText:movieData.opening_crawl,
+        }
+      })
+      setMovieList(movieObjects)
+    } catch (error) {
+      setError(error.message)
+    }
     setIsLoading(false)
-  }
+  }, [])
+  
+  // Run fetch movies function on initial component loading
+  useEffect(() => {fetchMoviesHandler()}, [fetchMoviesHandler])
 
   return (
     <>
       <section>
         <Button variant="contained" onClick={fetchMoviesHandler}>Fetch Movies</Button>
+        <AddMovie></AddMovie>
       </section>
       <section>
         {!isLoading && <MoviesList movies={movieList}/>}
@@ -38,6 +59,7 @@ function App() {
             <Skeleton variant="rectangular" width={'100%'} height={200} /> 
           </div>
         }
+        {!isLoading && error && <p>{error}</p>}
       </section>
     </>
   );
