@@ -5,7 +5,7 @@ import MoviesList from './components/MoviesList';
 import './App.css';
 import Button from '@mui/material/Button';
 import Skeleton from '@mui/material/Skeleton';
-import AddMovie from './components/AddMovie';
+import useCounter from './hooks/use-counter'
 
 function App() {
 
@@ -42,6 +42,12 @@ function App() {
     }
     setIsLoading(false)
   }, [])
+
+  // Get count
+  const countForwards = useCounter()
+  const countBackwards = useCounter(false)
+
+
   
   // Run fetch movies function on initial component loading
   useEffect(() => {fetchMoviesHandler()}, [fetchMoviesHandler])
@@ -50,7 +56,9 @@ function App() {
     <>
       <section>
         <Button variant="contained" onClick={fetchMoviesHandler}>Fetch Movies</Button>
-        <AddMovie></AddMovie>
+        <br/>
+        <h3>count: {countForwards}</h3>
+        <h3>count: {countBackwards}</h3>
       </section>
       <section>
         {!isLoading && <MoviesList movies={movieList}/>}
